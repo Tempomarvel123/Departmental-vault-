@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InsideBox</title>
+    <script>
+      (function() {
+        function shouldSuppress(msg) {
+          if (!msg) return false;
+          var s = String(msg).toLowerCase();
+          return s.includes('metamask') || s.includes('ethereum') || s.includes('failed to connect to metamask');
+        }
+
+        window.addEventListener('error', function(e) {
+          var msg = e.message || (e.error && e.error.message) || String(e.error || '');
+          if (shouldSuppress(msg)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          var msg = (e.reason && e.reason.message) || String(e.reason || '');
+          if (shouldSuppress(msg)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        var origError = console.error;
+        console.error = function() {
+          var args = Array.prototype.slice.call(arguments);
+          var msg = args.map(function(a) { return String(a && a.message ? a.message : a); }).join(' ');
+          if (shouldSuppress(msg)) return;
+          origError.apply(console, args);
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
